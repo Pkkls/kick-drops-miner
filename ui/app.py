@@ -1838,7 +1838,11 @@ class App(ctk.CTk):
                 # Force update
                 scrollable_frame.update_idletasks()
             except Exception as e:
-                status_label.configure(text=f"Error: {str(e)}")
+                try:
+                    if status_label.winfo_exists():
+                        status_label.configure(text=f"Error: {str(e)}")
+                except Exception:
+                    pass
                 import traceback
                 traceback.print_exc()
             finally:
@@ -1980,6 +1984,8 @@ class App(ctk.CTk):
     def _create_campaign_display(self, parent, campaign, camp_idx, scrollable_frame, game_data, status_label=None):
         """Helper function to create a campaign display frame"""
         try:
+            if not parent.winfo_exists():
+                return
             campaign_frame = ctk.CTkFrame(
                 parent,
                 corner_radius=10,
