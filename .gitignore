@@ -1,0 +1,5 @@
+# Tout ce qui est local et ne doit JAMAIS partir : profil Chrome, cookies, config.
+data/
+.venv/
+__pycache__/
+*.pyc
