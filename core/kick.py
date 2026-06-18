@@ -5,20 +5,26 @@ urllib renvoie 403. Le driver navigue uniquement sur kick.com (allowlist egress)
 porte la session connectee (cookies du profil local) et execute les requetes
 fetch() dans le contexte de la page.
 
-Endpoints reels (verifies depuis HyperBeats/KickDropsMiner) :
+Endpoints reels :
 - scan des campagnes : https://web.kick.com/api/v1/drops/campaigns
 - progression        : https://web.kick.com/api/v1/drops/progress
 - etat d'une chaine  : https://kick.com/api/v2/channels/{slug}
+- utilisateur connecte: https://kick.com/api/v2/user
 """
 import json
+import os
+import time
+from urllib.parse import urlparse
 
 from .egress import assert_allowed
 
 CAMPAIGNS_URL = "https://web.kick.com/api/v1/drops/campaigns"
 PROGRESS_URL = "https://web.kick.com/api/v1/drops/progress"
 CHANNEL_URL = "https://kick.com/api/v2/channels/{slug}"
+USER_URL = "https://kick.com/api/v2/user"
 
-CHROME_PROFILE_DIR = "data/chrome_profile"  # profil reutilisable, local
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHROME_PROFILE_DIR = os.path.join(_ROOT, "data", "chrome_profile")
 
 
 def create_driver(headless: bool = False):
@@ -40,14 +46,30 @@ class KickClient:
     def __init__(self, driver):
         self.driver = driver
 
-    def _ensure_on_kick(self) -> None:
-        url = (self.driver.current_url or "")
-        if "kick.com" not in url:
+    def _ensure_on_kick(self, url: str = "") -> None:
+        # ponytail: navigate to the correct domain so fetch() is same-origin (no CORS)
+        want_web = urlparse(url).hostname == "web.kick.com"
+        current_host = urlparse(self.driver.current_url or "").hostname or ""
+
+        if want_web and current_host != "web.kick.com":
+            self.driver.get(assert_allowed("https://web.kick.com"))
+            self._wait_ready()
+        elif not want_web and current_host not in ("kick.com", "www.kick.com"):
             self.driver.get(assert_allowed("https://kick.com"))
+            self._wait_ready()
+
+    def _wait_ready(self) -> None:
+        for _ in range(20):
+            try:
+                if self.driver.execute_script("return document.readyState") == "complete":
+                    return
+            except Exception:
+                pass
+            time.sleep(0.5)
 
     def fetch_json(self, url: str):
         assert_allowed(url)
-        self._ensure_on_kick()
+        self._ensure_on_kick(url)
         script = """
         const cb = arguments[arguments.length - 1];
         fetch(arguments[0], {credentials: 'include', headers: {'Accept': 'application/json'}})
@@ -74,11 +96,7 @@ class KickClient:
 
 
 def parse_campaigns(response) -> list:
-    """Transforme la reponse /drops/campaigns en modele interne.
-
-    Portage fidele de _campaigns_from_response (KickDropsMiner) : on garde les
-    campagnes actives ou ayant des chaines participantes.
-    """
+    """Transforme la reponse /drops/campaigns en modele interne."""
     campaigns = []
     data = response.get("data", []) if isinstance(response, dict) else []
     if not isinstance(data, list):

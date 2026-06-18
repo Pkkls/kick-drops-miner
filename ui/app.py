@@ -62,12 +62,15 @@ class App(ctk.CTk):
         self.log_box.pack(fill="x", padx=12, pady=(0, 12))
 
     def _log(self, msg):
-        self.log_box.insert("end", msg + "\n")
-        self.log_box.see("end")
+        # ponytail: always schedule on main thread - safe to call from any thread
+        self.after(0, lambda m=msg: (self.log_box.insert("end", m + "\n"), self.log_box.see("end")))
 
     def _set_online(self, ok):
-        self.status_dot.configure(text="● connecte" if ok else "● hors ligne",
-                                  text_color="#22c55e" if ok else "#ef4444")
+        v = bool(ok)
+        self.after(0, lambda: self.status_dot.configure(
+            text="● connecte" if v else "● hors ligne",
+            text_color="#22c55e" if v else "#ef4444"
+        ))
 
     # ── Driver / login ──────────────────────────────────────────────────────────
     def _ensure_driver(self):
@@ -109,7 +112,7 @@ class App(ctk.CTk):
         saved = set(self.config_data.get("selected_channels", []))
 
         for c in self.campaigns:
-            head = f"{c['name']}  —  {c['game']}  [{c['status']}]"
+            head = f"{c['name']}  -  {c['game']}  [{c['status']}]"
             ctk.CTkLabel(self.list_frame, text=head, font=("", 13, "bold")).pack(
                 anchor="w", pady=(8, 0))
             if not c["channels"]:
@@ -162,7 +165,7 @@ class App(ctk.CTk):
             txt = "File terminee."
         else:
             txt = str(s)
-        self.after(0, lambda: self._log(txt))
+        self._log(txt)
 
 
 def run():
