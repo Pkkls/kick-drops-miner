@@ -222,7 +222,7 @@ class App(ctk.CTk):
         # Auth status label (filled in asynchronously - avoids blocking UI on network call)
         self._auth_label = ctk.CTkLabel(
             self.sidebar,
-            text="● Verification...",
+            text="● Checking...",
             text_color="#7f8c8d",
             font=ctk.CTkFont(size=11),
         )
@@ -823,7 +823,7 @@ class App(ctk.CTk):
                 if name:
                     self._auth_label.configure(text=f"● {name}", text_color="#2ecc71")
                 else:
-                    self._auth_label.configure(text="● Non connecte", text_color="#7f8c8d")
+                    self._auth_label.configure(text="● Not connected", text_color="#7f8c8d")
             self.after(0, _update)
         threading.Thread(target=_run, daemon=True).start()
 

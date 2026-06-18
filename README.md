@@ -1,58 +1,58 @@
 # Kick Drops Miner
 
-Application desktop Windows qui fait avancer automatiquement le temps de visionnage
-nécessaire pour débloquer les **drops Kick** (récompenses liées au visionnage d'un
-stream) : scan des campagnes actives, sélection des chaînes à regarder, lecture
-automatisée (AFK, son coupé) et affichage en direct de la progression.
+Windows desktop app that automatically progresses the watch-time required to
+unlock **Kick drops** (rewards tied to watching a stream): scans active
+campaigns, lets you pick channels to watch, plays them automatically (AFK,
+muted), and shows live progress.
 
-Inspirée de [HyperBeats/KickDropsMiner](https://github.com/HyperBeats/KickDropsMiner).
+Inspired by [HyperBeats/KickDropsMiner](https://github.com/HyperBeats/KickDropsMiner).
 
 ![status](https://img.shields.io/badge/status-MVP-orange) ![platform](https://img.shields.io/badge/platform-Windows-blue) ![python](https://img.shields.io/badge/python-3.10%2B-green)
 
 ---
 
-## Sommaire
+## Table of contents
 
-- [Ce que fait l'app](#ce-que-fait-lapp)
-- [Garanties de confidentialité](#garanties-de-confidentialité)
+- [What it does](#what-it-does)
+- [Privacy guarantees](#privacy-guarantees)
 - [Installation](#installation)
-- [Tutoriel pas à pas](#tutoriel-pas-à-pas)
-- [Architecture technique](#architecture-technique)
-- [Glossaire des termes techniques](#glossaire-des-termes-techniques)
-- [Dépannage](#dépannage)
-- [Avertissement](#avertissement)
+- [Step-by-step tutorial](#step-by-step-tutorial)
+- [Technical architecture](#technical-architecture)
+- [Technical glossary](#technical-glossary)
+- [Troubleshooting](#troubleshooting)
+- [Disclaimer](#disclaimer)
 
 ---
 
-## Ce que fait l'app
+## What it does
 
-| Fonction | Détail |
+| Feature | Detail |
 |---|---|
-| **Scan des campagnes** | Liste les campagnes de drops actives sur Kick (jeu, récompenses, chaînes éligibles). |
-| **File de mining** | Tu ajoutes des chaînes Kick à une liste, avec un objectif de minutes chacune. |
-| **Lecture automatisée** | Un Chrome dédié ouvre la chaîne, coupe le son, et la laisse jouer jusqu'à l'objectif. |
-| **Statut live/offline** | Chaque chaîne de la liste affiche en temps réel si le streamer est en ligne. |
-| **Glisser-déposer** | Réordonne la file en faisant glisser les lignes à la souris. |
-| **Progression des drops** | Affiche l'avancement réel de chaque campagne (via ton compte connecté). |
+| **Campaign scan** | Lists all active drop campaigns on Kick (game, rewards, eligible channels). |
+| **Mining queue** | Add Kick channels to a list, each with a minutes target. |
+| **Automated playback** | A dedicated Chrome opens the channel, mutes it, and lets it play until the target is reached. |
+| **Live/offline status** | Each channel in the list shows in real time whether the streamer is live. |
+| **Drag-and-drop** | Reorder the queue by dragging rows with the mouse. |
+| **Drop progress** | Shows real progress for each campaign (via your connected account). |
 
-## Garanties de confidentialité
+## Privacy guarantees
 
-- **Aucun serveur tiers, aucune télémétrie.** Le seul interlocuteur réseau est Kick.
-- **Allowlist d'égress imposée par le code** (`core/egress.py`) : toute requête HTTP
-  ou navigation Chrome passe par `assert_allowed()`, qui n'autorise que `*.kick.com`
-  et lève une erreur (`EgressError`) sur tout le reste.
-- **Login local** : tu te connectes dans une fenêtre Chrome dédiée, isolée de ton
-  navigateur principal. Les cookies de session restent sur ton disque
-  (`data/`, ignoré par git) et ne sont jamais transmis ailleurs qu'à Kick.
-- **Code ouvert et auditable.**
+- **No third-party server, no telemetry.** The only network peer is Kick.
+- **Egress allowlist enforced in code** (`core/egress.py`): every HTTP request
+  and Chrome navigation goes through `assert_allowed()`, which only permits
+  `*.kick.com` and raises an error (`EgressError`) on anything else.
+- **Local login**: you sign in inside a dedicated Chrome window, isolated from
+  your main browser. Session cookies stay on your disk (`data/`, git-ignored)
+  and are never sent anywhere except to Kick.
+- **Open, auditable code.**
 
-Ce n'est pas un pare-feu OS, c'est une barrière applicative côté code. Pour une
-preuve externe, lance l'app derrière un proxy (mitmproxy / Fiddler) : seul
-`kick.com` doit apparaître dans le trafic.
+This is not an OS-level firewall — it's an application-level barrier in the
+code. For external proof, run the app behind a proxy (mitmproxy / Fiddler):
+only `kick.com` should ever show up in the traffic.
 
 ## Installation
 
-Prérequis : **Windows 10/11**, **Python 3.10+**, **Google Chrome** installé.
+Requirements: **Windows 10/11**, **Python 3.10+**, **Google Chrome** installed.
 
 ```powershell
 git clone https://github.com/Pkkls/kick-drops-miner.git
@@ -60,10 +60,10 @@ cd kick-drops-miner
 run.bat
 ```
 
-`run.bat` crée l'environnement virtuel, installe les dépendances et lance l'app —
-double-clique simplement sur le fichier pour les lancements suivants.
+`run.bat` creates the virtual environment, installs dependencies, and launches
+the app — just double-click it for every later launch.
 
-Installation manuelle (équivalente) :
+Manual installation (equivalent):
 
 ```powershell
 py -3.10 -m venv .venv
@@ -72,110 +72,110 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Tutoriel pas à pas
+## Step-by-step tutorial
 
-### 1. Se connecter à Kick
+### 1. Sign in to Kick
 
-Clique sur **"Se connecter (cookies)"** dans la barre latérale.
+Click **"Sign in (cookies)"** in the sidebar.
 
-- L'app tente d'abord d'importer automatiquement ta session si tu es déjà
-  connecté dans Chrome ou Brave sur cette machine.
-- Si l'import automatique échoue (cas le plus courant — voir
-  [glossaire](#glossaire-des-termes-techniques) sur le chiffrement des cookies),
-  une fenêtre Chrome dédiée s'ouvre : connecte-toi normalement à Kick dans cette
-  fenêtre, puis ferme-la. Les cookies sont sauvegardés automatiquement.
-- Une fois connecté, ton nom d'utilisateur Kick apparaît en vert sous le bouton.
+- The app first tries to automatically import your session if you're already
+  logged in to Chrome or Brave on this machine.
+- If automatic import fails (the most common case — see the
+  [glossary](#technical-glossary) on cookie encryption), a dedicated Chrome
+  window opens: log in normally to Kick in that window, then close it.
+  Cookies are saved automatically.
+- Once connected, your Kick username appears in green under the button.
 
-### 2. Voir les campagnes de drops disponibles
+### 2. Check available drop campaigns
 
-Clique sur **"Campagnes Drops"**. La fenêtre liste toutes les campagnes actives :
-jeu concerné, récompenses, et ta progression si tu es connecté.
+Click **"Drop campaigns"**. The window lists every active campaign: game,
+rewards, and your progress if you're logged in.
 
-### 3. Ajouter des chaînes à la file
+### 3. Add channels to the queue
 
-Clique sur **"Ajouter un lien"**, colle une URL Kick (`https://kick.com/nom_du_streamer`),
-choisis un objectif en minutes. Répète pour chaque chaîne à miner.
+Click **"Add link"**, paste a Kick URL (`https://kick.com/streamer_name`),
+choose a minutes target. Repeat for every channel you want to mine.
 
-Double-clique sur une URL dans la liste pour l'ouvrir dans ton navigateur (vérifier
-le contenu avant de lancer, par exemple).
+Double-click a URL in the list to open it in your browser (useful to check
+the content before starting).
 
-### 4. Réordonner la file (optionnel)
+### 4. Reorder the queue (optional)
 
-Glisse une ligne de la liste vers le haut ou le bas avec la souris pour changer
-l'ordre de passage.
+Drag a row up or down with the mouse to change the play order.
 
-### 5. Démarrer le mining
+### 5. Start mining
 
-Clique sur **"Démarrer la file"**. L'app :
-1. Vérifie que la première chaîne est bien en ligne (statut affiché dans la colonne).
-2. Ouvre un Chrome headless dédié, charge la session, et lance le stream en muet.
-3. Une fois l'objectif de minutes atteint, passe à la chaîne suivante.
-4. Si une chaîne est hors ligne, elle est marquée et retentée plus tard.
+Click **"Start queue"**. The app:
+1. Checks that the first channel is actually live (status shown in the column).
+2. Opens a dedicated headless Chrome, loads the session, and plays the stream muted.
+3. Once the minutes target is reached, moves on to the next channel.
+4. If a channel is offline, it's flagged and retried later.
 
-Un seul stream tourne à la fois (limitation imposée par Kick côté serveur).
+Only one stream runs at a time (a server-side limitation on Kick's end).
 
-### 6. Arrêter
+### 6. Stop
 
-**"Stop sélection"** arrête le stream en cours sans toucher au reste de la file.
+**"Stop selection"** stops the currently running stream without touching the
+rest of the queue.
 
-## Architecture technique
+## Technical architecture
 
 ```
-ui/app.py        → Interface (customtkinter), file de mining, affichage live/offline
-core/api.py       → Appels HTTP directs à l'API Kick (campagnes, progression, statut live)
-core/worker.py    → StreamWorker : pilote un Chrome headless pour regarder un stream
-core/browser.py   → Création du driver Chrome (undetected-chromedriver) + gestion cookies
-core/egress.py    → Allowlist réseau : bloque toute destination hors *.kick.com
-core/config.py    → Persistance de la configuration locale (data/config.json)
-utils/helpers.py  → Fonctions partagées (chemins, parsing d'URL, traductions)
+ui/app.py        → Interface (customtkinter), mining queue, live/offline display
+core/api.py       → Direct HTTP calls to the Kick API (campaigns, progress, live status)
+core/worker.py    → StreamWorker: drives a headless Chrome to watch a stream
+core/browser.py   → Chrome driver creation (undetected-chromedriver) + cookie handling
+core/egress.py    → Network allowlist: blocks any destination outside *.kick.com
+core/config.py    → Local config persistence (data/config.json)
+utils/helpers.py  → Shared helpers (paths, URL parsing, translations)
 ```
 
-**Pourquoi un vrai Chrome et pas de simples requêtes HTTP ?**
-Kick est protégé par Cloudflare. Une requête HTTP nue (sans navigateur réel) est
-bloquée. Pour les *lectures* d'API (campagnes, progression, statut live), l'app
-contourne ça en envoyant les bons en-têtes et cookies de session directement en
-HTTP — pas besoin de navigateur pour ça. Mais pour faire *progresser le watch-time*
-d'un drop, Kick exige qu'un vrai lecteur vidéo tourne dans un navigateur connecté :
-d'où le Chrome headless dédié au mining.
+**Why a real Chrome instead of plain HTTP requests?**
+Kick is protected by Cloudflare. A bare HTTP request (no real browser) gets
+blocked. For *reads* (campaigns, progress, live status), the app works around
+this by sending the right headers and session cookies directly over HTTP — no
+browser needed there. But to actually *progress* a drop's watch-time, Kick
+requires a real video player running in a logged-in browser — hence the
+dedicated headless Chrome used for mining.
 
-**Pourquoi exclure les cookies Cloudflare (`__cf_bm`, `_cfuvid`, `cf_clearance`)
-lors de l'injection ?**
-Ces cookies sont liés à l'empreinte du navigateur qui les a obtenus (IP, user-agent,
-comportement). Les réinjecter dans un *autre* navigateur (le Chrome dédié de l'app)
-casse la validation Cloudflare de ce nouveau navigateur. Seuls les cookies
-d'authentification Kick (`session_token`, `kick_session`, etc.) sont réutilisés ;
-Cloudflare émet ses propres cookies frais pour la nouvelle session Chrome.
+**Why exclude Cloudflare cookies (`__cf_bm`, `_cfuvid`, `cf_clearance`) when
+injecting a session?**
+Those cookies are tied to the fingerprint of the browser that obtained them
+(IP, user-agent, behavior). Re-injecting them into a *different* browser (the
+app's dedicated Chrome) breaks that new browser's Cloudflare validation. Only
+the actual Kick auth cookies (`session_token`, `kick_session`, etc.) are
+reused; Cloudflare issues its own fresh cookies for the new Chrome session.
 
-## Glossaire des termes techniques
+## Technical glossary
 
-| Terme | Explication |
+| Term | Explanation |
 |---|---|
-| **Selenium** | Bibliothèque qui permet de piloter un navigateur depuis du code (ouvrir une page, cliquer, lire le contenu) comme si un humain le faisait. |
-| **undetected-chromedriver (UC)** | Variante de Selenium modifiée pour que les sites ne détectent pas qu'un robot pilote le navigateur (les sites bloquent souvent les navigateurs "automatisés" classiques). |
-| **Headless** | Mode où Chrome tourne sans fenêtre visible à l'écran — utile pour le mining en arrière-plan. |
-| **Cloudflare** | Service de protection anti-bot/anti-DDoS utilisé par Kick. Il analyse le comportement du navigateur et bloque les requêtes qui ressemblent à un script automatisé. |
-| **Cookie** | Petit fichier texte qu'un site dépose dans le navigateur pour se souvenir de toi (session connectée, préférences). Le vol ou la réutilisation abusive d'un cookie de session permet d'usurper un compte — d'où l'attention portée à ne jamais les exposer. |
-| **DPAPI** | "Data Protection API" de Windows : système de chiffrement utilisé par Chrome/Brave pour protéger les cookies stockés sur disque, lié au compte utilisateur Windows. |
-| **session_token / kick_session** | Cookies qui identifient ta session Kick connectée. Ce sont les seuls réutilisés par l'app pour s'authentifier auprès de l'API. |
-| **Allowlist d'égress** | Liste blanche des destinations réseau autorisées. Ici, seul `*.kick.com` ; toute tentative vers un autre domaine est bloquée par le code lui-même (`core/egress.py`). |
-| **Watch-time** | Temps de visionnage cumulé d'un stream, calculé côté serveur Kick, qui déclenche le déblocage des drops une fois le seuil de la campagne atteint. |
-| **AFK (Away From Keyboard)** | Ici : laisser un stream jouer sans interaction humaine pour accumuler du watch-time. |
-| **Drag-and-drop** | Glisser-déposer : faire glisser un élément à la souris pour le déplacer (réordonner la file de mining). |
+| **Selenium** | A library that lets code drive a browser (open a page, click, read content) as if a human were doing it. |
+| **undetected-chromedriver (UC)** | A modified Selenium variant so sites can't tell a script is driving the browser (sites often block standard "automated" browsers). |
+| **Headless** | Chrome running with no visible window — used for mining in the background. |
+| **Cloudflare** | The anti-bot/anti-DDoS service Kick uses. It analyzes browser behavior and blocks requests that look like an automated script. |
+| **Cookie** | A small piece of data a site stores in your browser to remember you (logged-in session, preferences). Stealing or reusing a session cookie can let someone impersonate an account — hence the care taken to never expose them. |
+| **DPAPI** | Windows' "Data Protection API": the encryption system Chrome/Brave use to protect cookies stored on disk, tied to the Windows user account. |
+| **session_token / kick_session** | Cookies that identify your logged-in Kick session. These are the only ones reused by the app to authenticate against the API. |
+| **Egress allowlist** | A whitelist of allowed network destinations. Here, only `*.kick.com` — any attempt at another domain is blocked by the code itself (`core/egress.py`). |
+| **Watch-time** | Cumulative stream viewing time, tracked server-side by Kick, which unlocks drops once a campaign's threshold is reached. |
+| **AFK (Away From Keyboard)** | Here: leaving a stream playing with no human interaction to accumulate watch-time. |
+| **Drag-and-drop** | Dragging an item with the mouse to move it (used to reorder the mining queue). |
 
-## Dépannage
+## Troubleshooting
 
-- **"Se connecter" ouvre Chrome puis se ferme immédiatement** : vérifie que Chrome
-  est installé et à jour. L'app détecte automatiquement la version installée.
-- **Tous les streams affichent "OFFLINE" alors qu'ils sont en ligne** : ta session
-  a probablement expiré — reconnecte-toi via "Se connecter (cookies)".
-- **"Démarrer la file" ne fait rien** : vérifie le statut live affiché dans la
-  colonne ; si tout est marqué OFFLINE, la file attend qu'une chaîne passe en
-  ligne avant de démarrer.
-- **Import automatique des cookies échoue** : c'est normal sur Chrome récent
-  (chiffrement renforcé des cookies, "v20"). L'app bascule automatiquement sur la
-  fenêtre de connexion manuelle.
+- **"Sign in" opens Chrome then closes immediately**: make sure Chrome is
+  installed and up to date. The app auto-detects the installed version.
+- **Every stream shows "OFFLINE" even though they're live**: your session has
+  probably expired — sign in again via "Sign in (cookies)".
+- **"Start queue" does nothing**: check the live status shown in the column;
+  if everything is marked OFFLINE, the queue is waiting for a channel to go
+  live before starting.
+- **Automatic cookie import fails**: this is expected on recent Chrome
+  (stronger cookie encryption, "v20"). The app automatically falls back to
+  the manual login window.
 
-## Avertissement
+## Disclaimer
 
-Le mining AFK automatisé de drops est contraire aux conditions d'utilisation de
-Kick. Usage à tes propres risques (action possible sur le compte concerné).
+Automated AFK drop mining violates Kick's terms of service. Use at your own
+risk (the account involved may be subject to action).
