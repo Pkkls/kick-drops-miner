@@ -28,7 +28,15 @@ class App(ctk.CTk):
     def _build(self):
         top = ctk.CTkFrame(self)
         top.pack(fill="x", padx=12, pady=10)
-        ctk.CTkLabel(top, text="Kick Drops Miner", font=("", 18, "bold")).pack(side="left")
+
+        logo = ctk.CTkFrame(top, width=36, height=36, fg_color="#53fc18", corner_radius=18)
+        logo.pack(side="left", padx=(0, 8))
+        logo.pack_propagate(False)
+        ctk.CTkLabel(logo, text="K", font=("Arial Black", 16, "bold"),
+                     text_color="#000000", fg_color="transparent").pack(expand=True)
+
+        ctk.CTkLabel(top, text="Kick Drops Miner", font=("", 18, "bold"),
+                     text_color="#53fc18").pack(side="left")
         self.status_dot = ctk.CTkLabel(top, text="● hors ligne", text_color="#ef4444")
         self.status_dot.pack(side="right")
 
