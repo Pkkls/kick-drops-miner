@@ -57,6 +57,15 @@ Prérequis : **Windows 10/11**, **Python 3.10+**, **Google Chrome** installé.
 ```powershell
 git clone https://github.com/Pkkls/kick-drops-miner.git
 cd kick-drops-miner
+run.bat
+```
+
+`run.bat` crée l'environnement virtuel, installe les dépendances et lance l'app —
+double-clique simplement sur le fichier pour les lancements suivants.
+
+Installation manuelle (équivalente) :
+
+```powershell
 py -3.10 -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
