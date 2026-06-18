@@ -1,7 +1,6 @@
-"""Point d'entree. Verifie la garantie d'egress puis lance l'UI."""
-from core import egress
-from ui.app import run
+﻿"""KickDropsMiner - Main Entry Point"""
+from ui.app import App
 
 if __name__ == "__main__":
-    egress.self_test()
-    run()
+    app = App()
+    app.mainloop()

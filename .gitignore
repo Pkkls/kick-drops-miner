@@ -1,5 +1,10 @@
 # Tout ce qui est local et ne doit JAMAIS partir : profil Chrome, cookies, config.
 data/
+cookies/
+chrome_data/
+config.json
 .venv/
 __pycache__/
 *.pyc
+*.log
+chromedriver-win64/*.exe
