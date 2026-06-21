@@ -74,6 +74,7 @@ python main.py
 <img width="991" height="789" alt="image" src="https://github.com/user-attachments/assets/82f8b3c4-42a6-4074-9609-a2e72e938a26" />
 <img width="1048" height="780" alt="image" src="https://github.com/user-attachments/assets/9973cb2b-e48f-4d87-b7bf-b47f72ba8ea4" />
 A very small browser windows will  open , in 144p <img width="498" height="344" alt="image" src="https://github.com/user-attachments/assets/c7cc250b-09c8-471f-a05b-6947374c7b8e" />
+This terminal has to stay open <img width="598" height="211" alt="image" src="https://github.com/user-attachments/assets/4f860cbf-950e-499e-8280-e6377837d863" />
 
 ## Step-by-step tutorial
 
